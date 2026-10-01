@@ -1,0 +1,57 @@
+version: 1
+repo: kvnloo/ds4
+id: dwarfstar
+kind: suite
+summary: Narrow native local-inference engine optimized for selected open-weight models across Metal, CUDA, ROCm, SSD streaming, multi-GPU, serving, and native coding-agent workflows.
+
+architecture:
+  subsystems:
+    - id: inference-core
+      name: Native inference core
+      kind: compute
+      summary: Owns model loading, token generation, prompt rendering, KV state, quantized execution, and shared native runtime logic.
+      paths: [ds4.c, ds4.h, ds4_cli.c, ds4_kvstore.c, ds4_prompt_prefix.c]
+    - id: accelerator-backends
+      name: Accelerator backends
+      kind: compute
+      summary: Implements Metal, CUDA, ROCm, tensor-parallel, and multi-GPU execution for supported model families.
+      paths: [metal/, cuda/, rocm/, ds4_metal.m, ds4_cuda.cu, ds4_rocm.cu, ds4_tp.c, ds4_gpu_tp.h]
+      depends_on: [inference-core]
+    - id: memory-streaming
+      name: Memory and SSD streaming
+      kind: compute
+      summary: Extends local model capacity with SSD streaming, layer packing, platform memory helpers, and distributed memory strategies.
+      paths: [ds4_ssd.c, ds4_ssd.h, ds4_layer_pack.c, ds4_linux_memory.h, ds4_rocm_memory.h, ds4_distributed.c]
+      depends_on: [inference-core]
+    - id: serving
+      name: HTTP and multi-session serving
+      kind: execution
+      summary: Exposes local inference through an HTTP server and multi-session runtime while preserving native model state.
+      paths: [ds4_server.c, ds4_web.c]
+      depends_on: [inference-core]
+    - id: native-agent
+      name: Native coding agent
+      kind: execution
+      summary: Runs coding-agent sessions directly against the native inference engine with tool formatting and persistent KV-backed sessions.
+      paths: [ds4_agent.c, ds4_tool_text.h]
+      depends_on: [inference-core]
+    - id: eval-bench
+      name: Evaluation and benchmark surface
+      kind: evidence
+      summary: Measures quality, speed, supported-model behavior, and release readiness across integrated engine paths.
+      paths: [ds4_eval.c, ds4_eval_cases.c, speed-bench/, tests/, EVAL_DATA.md, QA_BEFORE_RELEASES.md]
+      depends_on: [inference-core, accelerator-backends]
+
+  provides_interfaces: []
+  consumes_interfaces: []
+  produces_representations: []
+  consumes_representations: []
+
+  boundaries:
+    owns: [native local inference engine, selected model backends, accelerator execution, SSD streaming, local serving, native coding agent]
+    not_here: [general-purpose GGUF compatibility, cloud provider routing, canonical model policy, Zer0 architecture authority]
+
+  evidence:
+    docs: [README.md, MODEL_CARD.md, docs/]
+    tests: [tests/, speed-bench/]
+    schemas: []
